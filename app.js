@@ -1,26 +1,43 @@
 const queryString = require('querystring')
 const handleUserRouter = require('./src/router/user')
 const handleBlogRouter = require('./src/router/blog')
-
+const getPostData = (req) => new Promise((resolve, reject) => {
+  if (req.method !== 'POST') {
+    return resolve({})
+  }
+  if (req.headers['content-type'] !== 'application/json') {
+    return resolve({})
+  }
+  let postData = ''
+  req.on('data', chunk => postData += chunk.toString())
+  req.on('end', () => {
+    if (!postData) {
+      return resolve({})
+    }
+    resolve(JSON.parse(postData))
+  })
+})
 const serverHandle = (req, res) => {
   res.setHeader('Content-type', 'application/json')
-  req.query = queryString.parse(req.url.split('?')[0])
-  const blogData = handleBlogRouter(req, res)
-  const userData = handleUserRouter(req, res)
+  req.query = queryString.parse(req.url.split('?')[1])
+  getPostData(req).then(postData => {
+    req.body = postData
+    const blogData = handleBlogRouter(req, res)
+    const userData = handleUserRouter(req, res)
+    if (blogData) {
+      return res.end(JSON.stringify(blogData))
+    }
 
-  if (blogData) {
-    return res.end(JSON.stringify(blogData))
-  }
+    if (userData) {
+      return res.end(JSON.stringify(userData))
+    }
 
-  if (userData) {
-    return res.end(JSON.stringify(userData))
-  }
-
-  res.writeHead(404, {
-    "Content-type": "text/plain"
+    res.writeHead(404, {
+      "Content-type": "text/plain"
+    })
+    res.write("404 not found")
+    res.end()
   })
-  res.write("404 not found")
-  res.end()
 }
 
 module.exports = {
