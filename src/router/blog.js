@@ -12,31 +12,49 @@ const handleBlogRouter = (req, res) => {
   }
 
   if (method === 'GET' && path === '/api/blog/detail') {
-    const data = getDetail(id)
-    return new SuccessModel(data)
+    return getDetail(id).then(data => {
+      return new SuccessModel(data)
+    })
   }
 
   if (method === 'POST' && path === '/api/blog/add') {
-    const data = addBlog(req.body)
-    return new SuccessModel(data)
+    return addBlog(req.body).then(data => {
+      return new SuccessModel(data)
+    })
   }
 
   if (method === 'POST' && path === '/api/blog/update') {
-    const data = modifyBlog(id, req.body)
-    if (data) {
-      return new SuccessModel(data)
-    } else {
-      return new ErrorModel('modify failed')
-    }
+    return modifyBlog(id, req.body).then(data => {
+      if (data) {
+        const {affectedRows} = data
+        if (affectedRows > 0) {
+          return new SuccessModel({
+            status: true
+          })
+        } else {
+          return new ErrorModel('更新失败')
+        }
+      } else {
+        return new ErrorModel('更新失败')
+      }
+    })
   }
 
   if (method === 'POST' && path === '/api/blog/delete') {
-    const data = deleteBlog(id)
-    if (data) {
-      return new SuccessModel(data)
-    } else {
-      return new ErrorModel('delete failed')
-    }
+    return deleteBlog(id).then(data => {
+      if (data) {
+        const {affectedRows} = data
+        if (affectedRows > 0) {
+          return new SuccessModel({
+            status: true
+          })
+        } else {
+          return new ErrorModel('更新失败')
+        }
+      } else {
+        return new ErrorModel('更新失败')
+      }
+    })
   }
 }
 

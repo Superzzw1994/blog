@@ -1,14 +1,20 @@
 const {execSql} = require("../db/mysql");
 const addBlog = (blogData = {}) => {
-  return {
-    id: 3
-  }
+  const {title, content, author = 'zzw1994529'} = blogData
+  const createTime = Date.now()
+  const sql = `insert into blogs(title, content, author, createTime) values ('${title}','${content}','${author}','${createTime}')`
+  return execSql(sql).then(res => {
+    return {
+      id: res.insertId
+    }
+  })
 }
 
 const modifyBlog = (id, blogData) => {
-  return {
-    id,
-  }
+  const {title, content} = blogData
+  const modifyTime = Date.now()
+  const sql = `update blogs set title='${title}', content='${content}', modifyTime='${modifyTime}' where id = ${id} `
+  return execSql(sql)
 }
 
 const getList = (author, keyword) => {
@@ -20,21 +26,17 @@ const getList = (author, keyword) => {
     sql += `and title like '%${keyword}%'`
   }
   sql += `order by createTime desc`
-  console.log(sql)
   return execSql(sql)
 }
 
 const getDetail = (id = 0) => {
-  return {
-    id,
-    name: 'zzw'
-  }
+  let sql = `select * from blogs where id=${id}`
+  return execSql(sql).then(rows => rows[0])
 }
 
 const deleteBlog = id => {
-  return {
-    id
-  }
+  const sql = `delete from blogs where id = ${id}`
+  return execSql(sql)
 }
 module.exports = {
   getList,
