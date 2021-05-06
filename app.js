@@ -25,13 +25,15 @@ const serverHandle = (req, res) => {
     const blogData = handleBlogRouter(req, res)
     const userData = handleUserRouter(req, res)
     if (blogData) {
-      return res.end(JSON.stringify(blogData))
+      return blogData.then(data => {
+        return res.end(JSON.stringify(data))
+      })
     }
-
     if (userData) {
-      return res.end(JSON.stringify(userData))
+      return userData.then(data => {
+        return res.end(JSON.stringify(data))
+      })
     }
-
     res.writeHead(404, {
       "Content-type": "text/plain"
     })

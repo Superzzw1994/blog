@@ -10,9 +10,8 @@ const execSql = (sql) => new Promise((resolve, reject) => {
     resolve(result)
   })
 })
-const sql = `insert into users(username, \`password\`, realname) values ('abcccc', 'shzx1994529', 'zzw');`
 
-connect.end()
+// connect.end()
 module.exports = {
   execSql
 }

@@ -1,3 +1,4 @@
+const {execSql} = require("../db/mysql");
 const addBlog = (blogData = {}) => {
   return {
     id: 3
@@ -11,15 +12,16 @@ const modifyBlog = (id, blogData) => {
 }
 
 const getList = (author, keyword) => {
-  return [
-    {
-      id: 1,
-      title: 'title',
-      content: 'content',
-      author: 'zzw',
-      createTime: '456'
-    }
-  ]
+  let sql = `select * from blogs where 1 = 1 `
+  if (author) {
+    sql += `and author='${author}'`
+  }
+  if (keyword) {
+    sql += `and title like '%${keyword}%'`
+  }
+  sql += `order by createTime desc`
+  console.log(sql)
+  return execSql(sql)
 }
 
 const getDetail = (id = 0) => {
