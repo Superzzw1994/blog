@@ -1,6 +1,11 @@
 const {getPropertyFromRequest} = require('../utils')
 const {SuccessModel, ErrorModel} = require('../model/restModal')
 const {getList, getDetail, addBlog, modifyBlog, deleteBlog} = require('../controller/blog')
+const checkLogin = (req) => {
+  if (req.session.username) {
+    return Promise.resolve(new ErrorModel('尚未登录'))
+  }
+}
 const handleBlogRouter = (req, res) => {
   const {method, path} = getPropertyFromRequest(req)
   const {id = 0} = req.query
@@ -18,12 +23,20 @@ const handleBlogRouter = (req, res) => {
   }
 
   if (method === 'POST' && path === '/api/blog/add') {
+    const isLogin = checkLogin(req)
+    if (isLogin) {
+      return checkLogin
+    }
     return addBlog(req.body).then(data => {
       return new SuccessModel(data)
     })
   }
 
   if (method === 'POST' && path === '/api/blog/update') {
+    const isLogin = checkLogin(req)
+    if (isLogin) {
+      return checkLogin
+    }
     return modifyBlog(id, req.body).then(data => {
       if (data) {
         const {affectedRows} = data
@@ -41,6 +54,10 @@ const handleBlogRouter = (req, res) => {
   }
 
   if (method === 'POST' && path === '/api/blog/delete') {
+    const isLogin = checkLogin(req)
+    if (isLogin) {
+      return checkLogin
+    }
     return deleteBlog(id).then(data => {
       if (data) {
         const {affectedRows} = data

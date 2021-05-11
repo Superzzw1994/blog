@@ -1,6 +1,7 @@
 const queryString = require('querystring')
 const handleUserRouter = require('./src/router/user')
 const handleBlogRouter = require('./src/router/blog')
+const {get, set} = require('./src/db/redis')
 const getPostData = (req) => new Promise((resolve, reject) => {
   if (req.method !== 'POST') {
     return resolve({})
@@ -17,20 +18,55 @@ const getPostData = (req) => new Promise((resolve, reject) => {
     resolve(JSON.parse(postData))
   })
 })
+const getCookieExpires = () => {
+  const d = new Date()
+  d.setTime(d.getTime() + (24 * 60 * 60 * 1000))
+  return d.toGMTString()
+}
+
 const serverHandle = (req, res) => {
   res.setHeader('Content-type', 'application/json')
   req.query = queryString.parse(req.url.split('?')[1])
-  getPostData(req).then(postData => {
+  req.cookie = {}
+  const cookieStr = req.headers.cookie || ''
+  cookieStr.split(';').forEach(item => {
+    if (!item) {
+      return
+    }
+    const arr = item.split('=')
+    req.cookie[arr[0].trim()] = arr[1].trim()
+  })
+  let needSetCookie = false
+  let userId = req.cookie.userId
+  if (!userId) {
+    needSetCookie = true
+    userId = `${Date.now()}_${Math.random()}`
+    req.sessionId = userId
+    set(userId, {})
+  }
+  get(userId).then(sessionData => {
+    if (sessionData === null) {
+      set(userId, {})
+      req.session = {}
+    } else {
+      req.session = sessionData
+    }
+    return getPostData(req)
+  }).then(postData => {
     req.body = postData
     const blogData = handleBlogRouter(req, res)
     const userData = handleUserRouter(req, res)
     if (blogData) {
       return blogData.then(data => {
+        needSetCookie && res.setHeader('Set-Cookie', `userId=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`)
+        needSetCookie = false
         return res.end(JSON.stringify(data))
       })
     }
     if (userData) {
       return userData.then(data => {
+        needSetCookie && res.setHeader('Set-Cookie', `userId=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`)
+        needSetCookie = false
         return res.end(JSON.stringify(data))
       })
     }
