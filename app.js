@@ -2,6 +2,7 @@ const queryString = require('querystring')
 const handleUserRouter = require('./src/router/user')
 const handleBlogRouter = require('./src/router/blog')
 const {get, set} = require('./src/db/redis')
+const {access} = require('./src/utils/log')
 const getPostData = (req) => new Promise((resolve, reject) => {
   if (req.method !== 'POST') {
     return resolve({})
@@ -25,6 +26,7 @@ const getCookieExpires = () => {
 }
 
 const serverHandle = (req, res) => {
+  access(`${req.method} -- ${req.url} -- ${req.headers['user-agent']} -- ${Date.now()}`)
   res.setHeader('Content-type', 'application/json')
   req.query = queryString.parse(req.url.split('?')[1])
   req.cookie = {}
