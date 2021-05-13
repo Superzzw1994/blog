@@ -1,5 +1,6 @@
 const express = require('express');
 import React from 'react'
+import proxy from 'express-http-proxy'
 import {StaticRouter, Route} from "react-router";
 import {renderToString} from 'react-dom/server'
 import Routes from "../Routes";
@@ -9,6 +10,9 @@ import {matchRoutes} from "react-router-config";
 
 const app = express();
 app.use(express.static('public'))
+app.use('/api', proxy('http://47.95.113.63', {
+  proxyReqPathResolver: (req) => `/ssr/api${req.url}`
+}))
 app.get('*', function (req, res, next) {
   const store = getStore()
   const routes = matchRoutes(Routes, req.path)
